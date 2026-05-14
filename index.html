@@ -71,6 +71,29 @@
         }
 
         window.addEventListener('load', checkServer);
+
+        const BACKEND_URL = "https://project-n-se6h.onrender.com/";
+
+async function keepServerAlive() {
+  try {
+    const response = await fetch(BACKEND_URL);
+
+    console.log(
+      "Ping sent at:",
+      new Date().toLocaleTimeString(),
+      "Status:",
+      response.status
+    );
+  } catch (error) {
+    console.error("Ping failed:", error);
+  }
+}
+
+// First ping immediately
+keepServerAlive();
+
+// Ping every 14 minutes
+setInterval(keepServerAlive, 14 * 60 * 1000);
     </script>
 </body>
 
