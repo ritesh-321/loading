@@ -51,50 +51,44 @@
         <div class="spinner"></div>
     </div>
 
-    <script>
-        const SERVER_URL = 'https://project-n-se6h.onrender.com/';
-        const CHECK_INTERVAL = 3000;
+<script>
+    // Backend health route
+    const SERVER_URL = "https://project-n-se6h.onrender.com/health";
 
-        function checkServer() {
-            fetch(SERVER_URL, { method: 'GET' })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = SERVER_URL;  // Redirect to server page
-                    } else {
-                        throw new Error('Server not ready');
-                    }
-                })
-                .catch(() => {
-                    console.log('Server not ready, retrying in 3 seconds...');
-                    setTimeout(checkServer, CHECK_INTERVAL);
-                });
+    // Ping every 5 minutes
+    const PING_INTERVAL = 5 * 60 * 1000;
+
+    async function keepServerAlive() {
+        try {
+            const response = await fetch(SERVER_URL);
+
+            console.log(
+                "✅ Ping sent:",
+                new Date().toLocaleTimeString(),
+                "Status:",
+                response.status
+            );
+
+            // If server responds successfully
+            if (response.ok) {
+                document.querySelector("h1").innerText =
+                    "Server is Active ✅";
+            }
+        } catch (error) {
+            console.error("❌ Ping failed:", error);
+
+            document.querySelector("h1").innerText =
+                "Server Sleeping... Retrying";
         }
+    }
 
-        window.addEventListener('load', checkServer);
+    // First ping immediately
+    keepServerAlive();
 
-        const BACKEND_URL = "https://project-n-se6h.onrender.com/";
+    // Continue pinging every 5 minutes
+    setInterval(keepServerAlive, PING_INTERVAL);
+</script>   
 
-async function keepServerAlive() {
-  try {
-    const response = await fetch(BACKEND_URL);
-
-    console.log(
-      "Ping sent at:",
-      new Date().toLocaleTimeString(),
-      "Status:",
-      response.status
-    );
-  } catch (error) {
-    console.error("Ping failed:", error);
-  }
-}
-
-// First ping immediately
-keepServerAlive();
-
-// Ping every 14 minutes
-setInterval(keepServerAlive, 14 * 60 * 1000);
-    </script>
 </body>
 
 </html>
