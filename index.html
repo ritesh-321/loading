@@ -52,42 +52,81 @@
     </div>
 
 <script>
-    // Backend health route
-    const SERVER_URL = "https://project-n-se6h.onrender.com/health";
+    const BACKEND_URL = "https://project-n-se6h.onrender.com";
+    const HEALTH_URL = `${BACKEND_URL}/health`;
 
-    // Ping every 5 minutes
-    const PING_INTERVAL = 5 * 60 * 1000;
+    // Retry every 5 seconds while server is sleeping
+    const WAKEUP_CHECK_INTERVAL = 5000;
 
-    async function keepServerAlive() {
+    // Keep alive ping every 5 minutes
+    const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000;
+
+    let serverAwake = false;
+
+    async function wakeUpServer() {
         try {
-            const response = await fetch(SERVER_URL);
+            const response = await fetch(HEALTH_URL, {
+                method: "GET",
+                cache: "no-cache"
+            });
 
             console.log(
-                "✅ Ping sent:",
+                "Ping:",
                 new Date().toLocaleTimeString(),
                 "Status:",
                 response.status
             );
 
-            // If server responds successfully
             if (response.ok) {
-                document.querySelector("h1").innerText =
-                    "Server is Active ✅";
-            }
-        } catch (error) {
-            console.error("❌ Ping failed:", error);
+                serverAwake = true;
 
-            document.querySelector("h1").innerText =
-                "Server Sleeping... Retrying";
+                document.querySelector("h1").innerText =
+                    "Server Started ✅ Redirecting...";
+
+                // Start keep alive system
+                startKeepAlive();
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = BACKEND_URL;
+                }, 2000);
+
+            } else {
+                retryWakeup();
+            }
+
+        } catch (error) {
+            console.log("Server sleeping...");
+            retryWakeup();
         }
     }
 
-    // First ping immediately
-    keepServerAlive();
+    function retryWakeup() {
+        document.querySelector("h1").innerText =
+            "Waking Server... Please Wait ⏳";
 
-    // Continue pinging every 5 minutes
-    setInterval(keepServerAlive, PING_INTERVAL);
-</script>   
+        setTimeout(wakeUpServer, WAKEUP_CHECK_INTERVAL);
+    }
+
+    function startKeepAlive() {
+        setInterval(async () => {
+            try {
+                await fetch(HEALTH_URL);
+
+                console.log(
+                    "Keep Alive Ping:",
+                    new Date().toLocaleTimeString()
+                );
+
+            } catch (err) {
+                console.log("Keep alive failed");
+            }
+        }, KEEP_ALIVE_INTERVAL);
+    }
+
+    // Start wakeup process immediately
+    wakeUpServer();
+</script>
 
 </body>
 
